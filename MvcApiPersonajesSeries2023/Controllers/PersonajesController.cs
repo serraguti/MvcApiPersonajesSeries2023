@@ -19,5 +19,21 @@ namespace MvcApiPersonajesSeries2023.Controllers
                 await this.service.GetPersonajesSerieAsync(idserie);
             return View(personajes);
         }
+
+        public async Task<IActionResult> CreatePersonaje()
+        {
+            List<Serie> series = await this.service.GetSeriesAsync();
+            ViewData["SERIES"] = series;
+            return View();
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> CreatePersonaje(Personaje personaje)
+        {
+            await this.service.CreatePersonajeAsync(personaje.IdPersonaje
+                , personaje.Nombre, personaje.Imagen, personaje.IdSerie);
+            //LO VAMOS A LLEVAR A LA VISTA PERSONAJES SERIE
+            return RedirectToAction("PersonajesSerie", new { idserie = personaje.IdSerie });
+        }
     }
 }
