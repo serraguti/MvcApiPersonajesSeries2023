@@ -1,7 +1,12 @@
+using MvcApiPersonajesSeries2023.Services;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
+string apiSeries =
+    builder.Configuration.GetValue<string>("ApiUrls:ApiSeriesPersonajes");
+builder.Services.AddTransient<ServiceSeries>(z => new ServiceSeries(apiSeries));
 
 var app = builder.Build();
 
