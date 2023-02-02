@@ -65,6 +65,13 @@ namespace MvcApiPersonajesSeries2023.Services
             return personajes;
         }
 
+        public async Task<List<Personaje>> GetPersonajesSerieAsync(int idserie)
+        {
+            string request = "/api/series/personajesserie/" + idserie;
+            List<Personaje> personajes = await this.CallApiAsync<List<Personaje>>(request);
+            return personajes;
+        }
+
         public async Task<Personaje> FindPersonajeAsync(int idpersonaje)
         {
             string request = "/api/personajes/" + idpersonaje;
