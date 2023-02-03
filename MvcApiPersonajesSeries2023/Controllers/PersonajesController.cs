@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using MvcApiPersonajesSeries2023.Helpers;
 using MvcApiPersonajesSeries2023.Models;
 using MvcApiPersonajesSeries2023.Services;
 
@@ -7,10 +8,13 @@ namespace MvcApiPersonajesSeries2023.Controllers
     public class PersonajesController : Controller
     {
         private ServiceSeries service;
+        private HelperPathProvider helperPath;
 
-        public PersonajesController(ServiceSeries service)
+        public PersonajesController(ServiceSeries service
+            , HelperPathProvider helperPath)
         {
             this.service = service;
+            this.helperPath = helperPath;
         }
 
         public async Task<IActionResult> PersonajesSerie(int idserie)
@@ -28,8 +32,21 @@ namespace MvcApiPersonajesSeries2023.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> CreatePersonaje(Personaje personaje)
+        public async Task<IActionResult> CreatePersonaje
+            (Personaje personaje, IFormFile fichero)
         {
+            //DEBEMOS SUBIR EL FICHERO A NUESTRO SERVIDOR
+            string fileName = fichero.FileName;
+            string path = this.helperPath.GetMapPath(Folders.Imagenes, fileName);
+            using (Stream stream = new FileStream(path, FileMode.Create))
+            {
+                await fichero.CopyToAsync(stream);
+            }
+            //POR ULTIMO, GUARDAMOS EN EL API LA URL DE NUESTRO SERVIDOR
+            //DE LA IMAGEN DEL PERSONAJE
+            string folder = this.helperPath.GetNameFolder(Folders.Imagenes);
+            personaje.Imagen = this.helperPath.GetWebHostUrl()
+                + folder  + "/" + fileName;
             await this.service.CreatePersonajeAsync(personaje.IdPersonaje
                 , personaje.Nombre, personaje.Imagen, personaje.IdSerie);
             //LO VAMOS A LLEVAR A LA VISTA PERSONAJES SERIE
