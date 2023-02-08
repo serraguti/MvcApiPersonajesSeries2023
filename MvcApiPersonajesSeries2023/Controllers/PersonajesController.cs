@@ -9,12 +9,15 @@ namespace MvcApiPersonajesSeries2023.Controllers
     {
         private ServiceSeries service;
         private HelperPathProvider helperPath;
+        private ServiceStorageBlobs serviceStorage;
 
         public PersonajesController(ServiceSeries service
-            , HelperPathProvider helperPath)
+            , HelperPathProvider helperPath
+            , ServiceStorageBlobs serviceStorage)
         {
             this.service = service;
             this.helperPath = helperPath;
+            this.serviceStorage = serviceStorage;
         }
 
         public async Task<IActionResult> PersonajesSerie(int idserie)
@@ -35,18 +38,27 @@ namespace MvcApiPersonajesSeries2023.Controllers
         public async Task<IActionResult> CreatePersonaje
             (Personaje personaje, IFormFile fichero)
         {
-            //DEBEMOS SUBIR EL FICHERO A NUESTRO SERVIDOR
+            //DEBEMOS SUBIR EL FICHERO AL SERVIDOR AZURE
             string fileName = fichero.FileName;
-            string path = this.helperPath.GetMapPath(Folders.Imagenes, fileName);
-            using (Stream stream = new FileStream(path, FileMode.Create))
+            //SUBIMOS EL FICHERO A AZURE Y EXTRAMOS LA URL
+            string urlBlob = "";
+            using (Stream stream = fichero.OpenReadStream())
             {
-                await fichero.CopyToAsync(stream);
+                urlBlob =
+                    await this.serviceStorage.UploadBlobAsync(fileName, stream);
             }
-            //POR ULTIMO, GUARDAMOS EN EL API LA URL DE NUESTRO SERVIDOR
-            //DE LA IMAGEN DEL PERSONAJE
-            string folder = this.helperPath.GetNameFolder(Folders.Imagenes);
-            personaje.Imagen = this.helperPath.GetWebHostUrl()
-                + folder  + "/" + fileName;
+            //GUARDAMOS EN LA CLASE Personaje LA URL DEL BLOB DE IMAGEN
+            personaje.Imagen = urlBlob;
+            //string path = this.helperPath.GetMapPath(Folders.Imagenes, fileName);
+            //using (Stream stream = new FileStream(path, FileMode.Create))
+            //{
+            //    await fichero.CopyToAsync(stream);
+            //}
+            ////POR ULTIMO, GUARDAMOS EN EL API LA URL DE NUESTRO SERVIDOR
+            ////DE LA IMAGEN DEL PERSONAJE
+            //string folder = this.helperPath.GetNameFolder(Folders.Imagenes);
+            //personaje.Imagen = this.helperPath.GetWebHostUrl()
+            //    + folder  + "/" + fileName;
             await this.service.CreatePersonajeAsync(personaje.IdPersonaje
                 , personaje.Nombre, personaje.Imagen, personaje.IdSerie);
             //LO VAMOS A LLEVAR A LA VISTA PERSONAJES SERIE
